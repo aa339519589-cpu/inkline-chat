@@ -37,8 +37,7 @@ export function GrammarView({ state, onSelectLevel, onRecord }: GrammarViewProps
   }
 
   function nextLevel() {
-    const next = Math.min(grammarCards.length, card.level + 1)
-    onSelectLevel(next)
+    onSelectLevel(Math.min(grammarCards.length, card.level + 1))
   }
 
   return (
@@ -82,21 +81,22 @@ export function GrammarView({ state, onSelectLevel, onRecord }: GrammarViewProps
         <div className="grammar-options">
           {card.options.map((option, index) => {
             const isSelected = selected === option
-            const isAnswer = selected && option === card.answer
+            const isAnswer = Boolean(selected) && option === card.answer
             return (
-              <button
-                key={option}
-                type="button"
-                className={isAnswer ? 'answer' : isSelected ? 'selected' : ''}
-                onClick={() => choose(option)}
-                disabled={Boolean(selected)}
-              >
-                <span>{index + 1}</span>
-                <strong>{option}</strong>
-                <button type="button" className="sound-button" onClick={(event) => { event.stopPropagation(); speak(option) }} aria-label="播放句子">
+              <div className="grammar-option-row" key={option}>
+                <button
+                  type="button"
+                  className={isAnswer ? 'answer' : isSelected ? 'selected' : ''}
+                  onClick={() => choose(option)}
+                  disabled={Boolean(selected)}
+                >
+                  <span>{index + 1}</span>
+                  <strong>{option}</strong>
+                </button>
+                <button type="button" className="sound-button" onClick={() => speak(option)} aria-label="播放句子">
                   <Volume2 size={18} />
                 </button>
-              </button>
+              </div>
             )
           })}
         </div>
