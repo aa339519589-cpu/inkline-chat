@@ -1,15 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ArrowRight,
-  Check,
-  Eye,
-  Feather,
-  RotateCcw,
-  Volume2,
-  X,
-} from 'lucide-react'
+import { ArrowRight, Check, Eye, Feather, Volume2, X } from 'lucide-react'
 import { recallAnswerMatches } from '../lib/engine'
-import type { AnswerEvidence,LearningCard, SessionSummary } from '../types'
+import type { AnswerEvidence, LearningCard, SessionSummary } from '../types'
 
 export type CardResult = AnswerEvidence & {
   selected?: string
@@ -29,11 +21,11 @@ type LearnViewProps = {
 }
 
 const KIND_COPY = {
-  encounter: '\u5148\u7559\u4e0b\u4e00\u4e2a\u753b\u9762',
-  context: '\u4ece\u8bed\u5883\u91cc\u5224\u65ad',
-  recall: '\u8ba9\u8fd9\u4e2a\u8bcd\u81ea\u5df1\u6d6e\u4e0a\u6765',
-  boundary: '\u611f\u53d7\u5b83\u7684\u8fb9\u754c',
-  grammar: '\u542c\u4e00\u542c\u54ea\u53e5\u66f4\u81ea\u7136',
+  encounter: '初见',
+  context: '语境',
+  recall: '回想',
+  boundary: '边界',
+  grammar: '语感',
 }
 
 function speak(text: string) {
@@ -74,17 +66,15 @@ export function LearnView({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!card || summary) return
-      if (result && event.key=== 'Enter') {
+      if (result && event.key === 'Enter') {
         event.preventDefault()
         onNext()
         return
       }
-      if (result || card.kind=== 'recall') return
+      if (result || card.kind === 'recall') return
       const optionIndex = Number(event.key) - 1
       const options = getOptions(card)
-      if (optionIndex >= 0 &&optionIndex < options.length){
-        submitOption(options[optionIndex])
-      }
+      if (optionIndex >= 0 && optionIndex < options.length) submitOption(options[optionIndex])
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
@@ -94,29 +84,18 @@ export function LearnView({
 
   const answerMeta = useMemo(() => {
     if (!card) return null
-    if (card.kind === 'grammar' && card.grammar) {
-      return { expected: card.grammar.answer, insight: card.grammar.insight }
-    }
-    if (card.kind === 'boundary' && card.word?.contrast) {
-      return { expected: card.word.contrast.answer, insight: card.word.contrast.insight }
-    }
-    if (card.kind === 'context' && card.word?.challenge) {
-      return { expected: card.word.challenge.answer, insight: card.word.challenge.insight}
-    }
-    if (card.word) {
-      return {
-        expected: card.word.word,
-        insight: `${card.word.word} \u7684\u6838\u5fc3\u611f\u89c9\u662f\uff1a${card.word.core}\u3002`,
-      }
-    }
+    if (card.kind === 'grammar' && card.grammar) return { expected: card.grammar.answer, insight: card.grammar.insight }
+    if (card.kind === 'boundary' && card.word?.contrast) return { expected: card.word.contrast.answer, insight: card.word.contrast.insight }
+    if (card.kind === 'context' && card.word?.challenge) return { expected: card.word.challenge.answer, insight: card.word.challenge.insight }
+    if (card.word) return { expected: card.word.word, insight: `${card.word.word}：${card.word.core}` }
     return null
   }, [card])
 
-  function submitOption(selected: string, usedHint = false){
+  function submitOption(selected: string, usedHint = false) {
     if (!card || !answerMeta || result) return
     onAnswer({
       correct: selected === answerMeta.expected && !usedHint,
-      latencyMs: Date.now() -startedAt.current,
+      latencyMs: Date.now() - startedAt.current,
       usedHint,
       axis: card.targetAxis,
       cardKind: card.kind,
@@ -128,16 +107,16 @@ export function LearnView({
 
   function submitRecall(event: React.FormEvent) {
     event.preventDefault()
-    if (!card?.word || result|| !input.trim()) return
+    if (!card?.word || result || !input.trim()) return
     onAnswer({
       correct: recallAnswerMatches(input, card.word),
-      latencyMs: Date.now() -startedAt.current,
+      latencyMs: Date.now() - startedAt.current,
       usedHint: false,
       axis: card.targetAxis,
       cardKind: card.kind,
       selected: input,
       expected: card.word.word,
-      insight: `${card.word.word} \u7684\u6838\u5fc3\u611f\u89c9\u662f\uff1a${card.word.core}\u3002`,
+      insight: `${card.word.word}：${card.word.core}`,
     })
   }
 
@@ -145,7 +124,7 @@ export function LearnView({
     if (!card || !answerMeta || result) return
     onAnswer({
       correct: false,
-      latencyMs: Date.now() -startedAt.current,
+      latencyMs: Date.now() - startedAt.current,
       usedHint: true,
       axis: card.targetAxis,
       cardKind: card.kind,
@@ -157,15 +136,12 @@ export function LearnView({
   if (summary) {
     return (
       <main className="completion-view">
-        <div className="completion-glyph" aria-hidden="true"><Feather size={28} strokeWidth={1.5} /></div>
-        <p className="eyebrow">\u4eca\u5929\u7684\u8bed\u8a00\u6d41\u5df2\u7ecf\u6536\u675f</p>
-        <h1>\u8be5\u5de9\u56fa\u7684\uff0c<br />\u5df2\u7ecf\u5904\u7406\u597d\u4e86\u3002</h1>
-        <p className="completion-copy">
-          {summary.remembered}\u6b21\u8bb0\u5fc6\u987a\u5229\u63a5\u4e0a\uff0c{summary.repaired}\u4e2a\u6a21\u7cca\u70b9\u5df2\u91cd\u65b0\u653e\u56de\u8bed\u5883\u3002
-          <br />\u7528\u65f6\u7ea6 {Math.max(1, summary.minutes)} \u5206\u949f\u3002
-        </p>
+        <div className="completion-glyph" aria-hidden="true"><Feather size={24} strokeWidth={1.3} /></div>
+        <p className="eyebrow">完成</p>
+        <h1>这一轮，结束了。</h1>
+        <p className="completion-copy">记住 {summary.remembered} · 回炉 {summary.repaired} · {Math.max(1, summary.minutes)} 分钟</p>
         <button className="primary-button" type="button" onClick={onRestart}>
-          \u518d\u8d70\u4e00\u5c0f\u6bb5 <ArrowRight size={18} aria-hidden="true" />
+          再来一轮 <ArrowRight size={17} aria-hidden="true" />
         </button>
       </main>
     )
@@ -173,33 +149,27 @@ export function LearnView({
 
   if (!card) return null
 
-  const options = getOptions(card)
-
   return (
     <main className="learn-view">
-      <div className="session-meter" aria-label={`\u672c\u6b21\u5b66\u4e60\u8fdb\u5ea6 ${Math.round(progress)}%`}>
-        <span style={{ width:`${progress}%` }} />
+      <div className="session-meter" aria-label={`进度 ${Math.round(progress)}%`}>
+        <span style={{ width: `${progress}%` }} />
       </div>
 
       <section className="learning-stage" aria-live="polite">
         <div className="stage-meta">
           <p className="eyebrow">{KIND_COPY[card.kind]}</p>
-          {gentleMode && <span className="gentle-label">\u8f7b\u91cf\u8282\u594f</span>}
+          {gentleMode && <span className="gentle-label">轻</span>}
         </div>
 
         {!result && (
           <>
-            {card.kind === 'context' && card.word?.challenge && (
-              <ContextPrompt card={card} onSelect={submitOption} />
-            )}
+            {card.kind === 'context' && card.word?.challenge && <ContextPrompt card={card} onSelect={submitOption} />}
             {card.kind === 'recall' && card.word && (
               <form className="recall-prompt" onSubmit={submitRecall}>
                 <p className="scene-copy">{card.word.exampleZh ?? card.word.core}</p>
-                <p className="sentence sentence-large">
-                  {blankWord(card.word.example, card.word.word)}
-                </p>
+                <p className="sentence sentence-large">{blankWord(card.word.example, card.word.word)}</p>
                 <label className="recall-field">
-                  <span className="sr-only">\u8f93\u5165\u4f60\u60f3\u8d77\u7684\u82f1\u6587\u5355\u8bcd</span>
+                  <span className="sr-only">输入单词</span>
                   <input
                     ref={inputRef}
                     value={input}
@@ -207,27 +177,21 @@ export function LearnView({
                     autoComplete="off"
                     autoCapitalize="none"
                     spellCheck="false"
-                    placeholder={`${card.word.word[0]}${' \u00b7'.repeat(Math.max(2, card.word.word.length - 1))}`}
+                    placeholder={`${card.word.word[0]}${' ·'.repeat(Math.max(2, card.word.word.length - 1))}`}
                   />
-                  <button type="submit" disabled={!input.trim()} aria-label="\u63d0\u4ea4\u7b54\u6848">
-                    <ArrowRight size={19} aria-hidden="true" />
+                  <button type="submit" disabled={!input.trim()} aria-label="提交">
+                    <ArrowRight size={18} aria-hidden="true" />
                   </button>
                 </label>
               </form>
             )}
-            {card.kind === 'boundary' && card.word?.contrast && (
-              <BoundaryPrompt card={card} onSelect={submitOption} />
-            )}
-            {card.kind === 'grammar' && card.grammar && (
-              <GrammarPrompt card={card} onSelect={submitOption} />
-            )}
-            {card.kind === 'encounter' && card.word && (
-              <EncounterPrompt card={card} onContinue={() => submitOption(card.word!.word)} />
-            )}
+            {card.kind === 'boundary' && card.word?.contrast && <BoundaryPrompt card={card} onSelect={submitOption} />}
+            {card.kind === 'grammar' && card.grammar && <GrammarPrompt card={card} onSelect={submitOption} />}
+            {card.kind === 'encounter' && card.word && <EncounterPrompt card={card} onContinue={() => submitOption(card.word!.word)} />}
 
             {card.kind !== 'encounter' && (
               <button className="reveal-button" type="button" onClick={reveal}>
-                <Eye size={16} strokeWidth={1.8} aria-hidden="true" /> \u8fd8\u6ca1\u60f3\u8d77
+                <Eye size={15} strokeWidth={1.5} aria-hidden="true" /> 不会
               </button>
             )}
           </>
@@ -236,10 +200,7 @@ export function LearnView({
         {result && <Feedback card={card} result={result} onNext={onNext} />}
       </section>
 
-      <footer className="session-foot">
-        <span>{Math.min(currentIndex + 1, cards.length)} / {cards.length}</span>
-        <span>{gentleMode ? '\u5c31\u5b66\u5230\u8fd9\u4e48\u8f7b' : '\u7cfb\u7edf\u6b63\u5728\u5b89\u6392\u4e0b\u4e00\u6b21\u76f8\u9047'}</span>
-      </footer>
+      <footer className="session-foot">{Math.min(currentIndex + 1, cards.length)} / {cards.length}</footer>
     </main>
   )
 }
@@ -247,7 +208,7 @@ export function LearnView({
 function getOptions(card: LearningCard): string[] {
   if (card.kind === 'context') return card.word?.challenge?.options ?? []
   if (card.kind === 'boundary' && card.word?.contrast) return ['left', 'right']
-  if (card.kind === 'grammar') return card.grammar?.options?? []
+  if (card.kind === 'grammar') return card.grammar?.options ?? []
   return []
 }
 
@@ -256,10 +217,10 @@ function ContextPrompt({ card, onSelect }: { card: LearningCard; onSelect: (valu
   return (
     <div className="prompt-block">
       <p className="scene-copy">{challenge.scene}</p>
-      <h1 className="sentencesentence-large">{challenge.sentence}</h1>
+      <h1 className="sentence sentence-large">{challenge.sentence}</h1>
       <div className="choice-list">
         {challenge.options.map((option, index) => (
-          <button type="button" key={option} onClick={() =>onSelect(option)}>
+          <button type="button" key={option} onClick={() => onSelect(option)}>
             <span>{index + 1}</span>{option}
           </button>
         ))}
@@ -277,7 +238,7 @@ function BoundaryPrompt({ card, onSelect }: { card: LearningCard; onSelect: (val
         {(['left', 'right'] as const).map((side) => {
           const option = contrast[side]
           return (
-            <button type="button" key={side} onClick={() =>onSelect(side)}>
+            <button type="button" key={side} onClick={() => onSelect(side)}>
               <span>{option.label}</span>
               <strong>{option.sentence}</strong>
             </button>
@@ -296,7 +257,7 @@ function GrammarPrompt({ card, onSelect }: { card: LearningCard; onSelect: (valu
       <h1 className="prompt-question">{grammar.question}</h1>
       <div className="choice-list sentence-choices">
         {grammar.options.map((option, index) => (
-          <button type="button" key={option} onClick={() =>onSelect(option)}>
+          <button type="button" key={option} onClick={() => onSelect(option)}>
             <span>{index + 1}</span>{option}
           </button>
         ))}
@@ -309,7 +270,7 @@ function EncounterPrompt({ card, onContinue }: { card: LearningCard; onContinue:
   const word = card.word!
   return (
     <div className="encounter-block">
-      <button className="word-audio" type="button" onClick={() => speak(word.word)} aria-label={`\u64ad\u653e ${word.word} \u53d1\u97f3`}>
+      <button className="word-audio" type="button" onClick={() => speak(word.word)} aria-label={`播放 ${word.word}`}>
         <Volume2 size={18} aria-hidden="true" />
       </button>
       <h1>{word.word}</h1>
@@ -317,7 +278,7 @@ function EncounterPrompt({ card, onContinue }: { card: LearningCard; onContinue:
       <p className="encounter-definition">{word.definition}</p>
       <p className="sentence">{word.example}</p>
       <button className="primary-button" type="button" onClick={onContinue}>
-        \u7559\u4e0b\u8fd9\u4e2a\u753b\u9762 <ArrowRight size={18} aria-hidden="true" />
+        继续 <ArrowRight size={17} aria-hidden="true" />
       </button>
     </div>
   )
@@ -332,26 +293,26 @@ function Feedback({ card, result, onNext }: { card: LearningCard; result: CardRe
   return (
     <div className={result.correct ? 'feedback correct' : 'feedback repair'}>
       <div className="feedback-status">
-        <span>{result.correct? <Check size={18} aria-hidden="true" /> : <X size={18} aria-hidden="true" />}</span>
-        <p>{result.correct ? '\u5bf9\uff0c\u5c31\u662f\u8fd9\u79cd\u611f\u89c9' : '\u8fd9\u91cc\u66f4\u81ea\u7136\u7684\u662f'}</p>
+        <span>{result.correct ? <Check size={17} aria-hidden="true" /> : <X size={17} aria-hidden="true" />}</span>
+        <p>{result.correct ? '对' : '再看'}</p>
       </div>
 
       <h1 className="feedback-answer">{answerLabel}</h1>
       {word && (
         <div className="word-line">
-          <button type="button" onClick={() => speak(word.word)} aria-label={`\u64ad\u653e ${word.word} \u53d1\u97f3`}>
-            <Volume2 size={17} aria-hidden="true" />
+          <button type="button" onClick={() => speak(word.word)} aria-label={`播放 ${word.word}`}>
+            <Volume2 size={16} aria-hidden="true" />
           </button>
           <span>{word.phonetic}</span>
           <i>{word.chinese}</i>
         </div>
       )}
       <p className="insight">{result.insight}</p>
-      {word && <p className="collocation"><span />{word.collocations[0]}</p>}
+      {word && <p className="collocation">{word.collocations[0]}</p>}
       {card.kind === 'grammar' && card.grammar && <p className="echo-sentence">{card.grammar.echo}</p>}
 
       <button className="primary-button" type="button" onClick={onNext} autoFocus>
-        \u7ee7\u7eed <ArrowRight size={18} aria-hidden="true" />
+        继续 <ArrowRight size={17} aria-hidden="true" />
       </button>
     </div>
   )
