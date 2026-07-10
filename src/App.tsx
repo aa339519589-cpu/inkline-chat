@@ -209,15 +209,10 @@ function App() {
   } else {
     page = (
       <>
-        <div className="group-status-bar">
-          <div>
-            <span>第 {String(state.currentGroup).padStart(2, '0')} 组</span>
-            <strong>{seenInGroup} / {GROUP_SIZE} 已学</strong>
-          </div>
-          <div>
-            <span>固定顺序</span>
-            <strong>当前第 {positionInGroup} 个词</strong>
-          </div>
+        <div className="group-status-bar" aria-label={`第 ${state.currentGroup} 组，已学 ${seenInGroup}，当前第 ${positionInGroup} 个词`}>
+          <span>{String(state.currentGroup).padStart(2, '0')}</span>
+          <strong>{seenInGroup}/{GROUP_SIZE}</strong>
+          <span>{positionInGroup}</span>
         </div>
         <LearnView
           cards={cards}
