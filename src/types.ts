@@ -1,4 +1,4 @@
-export type SkillAxis = 'form'| 'receptive' | 'productive' |'usage' | 'boundary'
+export type SkillAxis = 'form' | 'receptive' | 'productive' | 'usage' | 'boundary'
 
 export type SkillTrace = {
   halfLifeDays: number
@@ -14,6 +14,10 @@ export type WordProgress = {
   traces: Record<SkillAxis, SkillTrace>
   exposures: number
   contextsSeen: string[]
+  firstSeenAt?: number
+  lastSeenAt?: number
+  correctCount: number
+  wrongCount: number
 }
 
 export type Challenge = {
@@ -50,6 +54,8 @@ export type VocabularyEntry = {
 
 export type GrammarCard = {
   id: string
+  level: number
+  title: string
   context: string
   question: string
   options: string[]
@@ -83,11 +89,29 @@ export type SessionSummary = {
   minutes: number
 }
 
+export type GroupHistory = {
+  startedAt?: number
+  lastStudiedAt?: number
+  completedAt?: number
+  sessions: number
+}
+
+export type GrammarProgress = {
+  attempts: number
+  correct: number
+  lastStudiedAt?: number
+  completedAt?: number
+}
+
 export type AppState = {
-  version: 1
+  version: 2
   progress: Record<string, WordProgress>
   completedCards: number
   sessions: number
   lastSessionAt?: number
   gentleMode: boolean
+  currentGroup: number
+  groupHistory: Record<number, GroupHistory>
+  selectedGrammarLevel: number
+  grammarProgress: Record<number, GrammarProgress>
 }
