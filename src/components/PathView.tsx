@@ -1,4 +1,4 @@
-import { CheckCircle2, Lock, PlayCircle } from 'lucide-react'
+import { Check, Lock, Play } from 'lucide-react'
 import { GROUP_SIZE, groupCount, groupUnlocked, studyHistory } from '../lib/course'
 import type { AppState, VocabularyEntry } from '../types'
 
@@ -15,9 +15,8 @@ export function PathView({ words, state, onSelectGroup }: PathViewProps) {
   return (
     <main className="course-view page-shell">
       <section className="course-intro">
-        <p className="eyebrow">单词课程</p>
-        <h1>固定分组，从简单到难。每组 60 个词。</h1>
-        <p>不随机跳词。每个词的第一次学习、错误次数、正确次数和最近学习时间都会保留。</p>
+        <p className="eyebrow">分组</p>
+        <h1>60 词一组，从易到难。</h1>
       </section>
 
       <section className="course-groups" aria-label="单词分组">
@@ -30,10 +29,10 @@ export function PathView({ words, state, onSelectGroup }: PathViewProps) {
             <article className={active ? 'course-group active' : 'course-group'} key={group}>
               <div className="course-group-head">
                 <div>
-                  <span>第 {String(group).padStart(2, '0')} 组</span>
-                  <h2>{group === 1 ? '基础高频动作' : group === 2 ? '进阶表达与语境' : '继续进阶'}</h2>
+                  <span>{String(group).padStart(2, '0')}</span>
+                  <h2>{group === 1 ? '基础' : group === 2 ? '进阶' : '继续'}</h2>
                 </div>
-                {completed ? <CheckCircle2 size={24} /> : unlocked ? <PlayCircle size={24} /> : <Lock size={22} />}
+                {completed ? <Check size={20} /> : unlocked ? <Play size={19} /> : <Lock size={18} />}
               </div>
 
               <div className="course-progress-line">
@@ -41,43 +40,39 @@ export function PathView({ words, state, onSelectGroup }: PathViewProps) {
               </div>
 
               <div className="course-stats">
-                <span><strong>{stats.seen}</strong> / {stats.total} 已学</span>
-                <span>答对 {stats.correct}</span>
-                <span>答错 {stats.wrong}</span>
+                <span><strong>{stats.seen}</strong> / {stats.total}</span>
+                <span>✓ {stats.correct}</span>
+                <span>× {stats.wrong}</span>
               </div>
 
-              <button
-                type="button"
-                className="course-action"
-                disabled={!unlocked}
-                onClick={() => onSelectGroup(group)}
-              >
-                {!unlocked ? '完成上一组后解锁' : active ? '继续当前组' : stats.seen ? '继续这一组' : '开始这一组'}
+              <button type="button" className="course-action" disabled={!unlocked} onClick={() => onSelectGroup(group)}>
+                {!unlocked ? '未解锁' : active || stats.seen ? '继续' : '开始'}
               </button>
             </article>
           )
         })}
       </section>
 
-      <section className="history-panel">
-        <p className="eyebrow">学习历史</p>
-        <h2>每一组都有记录，不会背完即消失。</h2>
-        <div className="history-list">
-          {groups.map((group) => {
-            const stats = studyHistory(words, state, group)
-            if (!stats.seen) return null
-            return (
-              <div key={group}>
-                <strong>第 {String(group).padStart(2, '0')} 组</strong>
-                <span>已学 {stats.seen} / {stats.total}</span>
-                <span>正确 {stats.correct}</span>
-                <span>错误 {stats.wrong}</span>
-                <span>{stats.history?.lastStudiedAt ? new Date(stats.history.lastStudiedAt).toLocaleDateString('zh-CN') : '刚开始'}</span>
-              </div>
-            )
-          })}
-        </div>
-      </section>
+      {groups.some((group) => studyHistory(words, state, group).seen > 0) && (
+        <section className="history-panel">
+          <p className="eyebrow">记录</p>
+          <div className="history-list">
+            {groups.map((group) => {
+              const stats = studyHistory(words, state, group)
+              if (!stats.seen) return null
+              return (
+                <div key={group}>
+                  <strong>{String(group).padStart(2, '0')}</strong>
+                  <span>{stats.seen}/{stats.total}</span>
+                  <span>✓ {stats.correct}</span>
+                  <span>× {stats.wrong}</span>
+                  <span>{stats.history?.lastStudiedAt ? new Date(stats.history.lastStudiedAt).toLocaleDateString('zh-CN') : ''}</span>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
     </main>
   )
 }
