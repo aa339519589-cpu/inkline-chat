@@ -1,0 +1,58 @@
+import type { GrammarCard } from '../types'
+
+export const grammarCards: GrammarCard[] = [
+  {
+    id: 'present-perfect-link',
+    context: '\u674e\u534e\u53bb\u5e74\u642c\u5230\u82cf\u5dde\uff0c\u73b0\u5728\u8fd8\u4f4f\u5728\u90a3\u91cc\u3002',
+    question: '\u54ea\u53e5\u8ba9\u201c\u4f4f\u5728\u82cf\u5dde\u201d\u4e00\u76f4\u8fde\u5230\u73b0\u5728\uff1f',
+    options: ['Li Hua lived inSuzhou for a year.', 'Li Hua has lived in Suzhou for a year.'],
+    answer: 'Li Hua has lived in Suzhou for a year.',
+    insight: 'has lived \u628a\u53bb\u5e74\u5f00\u59cb\u7684\u751f\u6d3b\u62c9\u5230\u4e86\u73b0\u5728\uff1blived \u66f4\u50cf\u5728\u56de\u770b\u4e00\u6bb5\u5df2\u7ecf\u6536\u8d77\u6765\u7684\u8fc7\u53bb\u3002',
+    echo: 'She has studied here since September.',
+  },
+  {
+    id: 'suggest-doing',
+    context: '\u5927\u5bb6\u90fd\u7d2f\u4e86\uff0cLeo \u628a\u201c\u5750\u516c\u4ea4\u201d\u8fd9\u4e2a\u60f3\u6cd5\u63d0\u4e86\u51fa\u6765\u3002',
+    question: '\u54ea\u4e00\u53e5\u5728\u82f1\u8bed\u91cc\u66f4\u81ea\u7136\uff1f',
+    options: ['Leo suggested taking the bus.', 'Leo suggestedto take the bus.'],
+    answer: 'Leo suggested taking the bus.',
+    insight: 'suggest \u50cf\u662f\u628a\u4e00\u4e2a\u201c\u505a\u67d0\u4e8b\u7684\u60f3\u6cd5\u201d\u6446\u51fa\u6765\uff0c\u6240\u4ee5 taking \u8ba9\u8fd9\u4e2a\u6d3b\u52a8\u6574\u4f53\u51fa\u73b0\u3002',
+    echo: 'Mina suggested meeting after class.',
+  },
+  {
+    id: 'stop-two-scenes',
+    context: '\u738b\u8001\u5e08\u8d70\u5728\u8def\u4e0a\uff0c\u770b\u5230\u4e00\u4f4d\u8001\u670b\u53cb\uff0c\u4e8e\u662f\u505c\u4e0b\u811a\u6b65\u548c\u4ed6\u804a\u5929\u3002',
+    question: '\u54ea\u53e5\u628a\u8fd9\u4e2a\u5c0f\u573a\u666f\u8bf4\u5bf9\u4e86\uff1f',
+    options: ['Mr Wang stoppedtalking to his friend.', 'Mr Wang stopped to talk to his friend.'],
+    answer: 'Mr Wang stopped to talk to his friend.',
+    insight: 'stopped to talk \u662f\u201c\u505c\u4e0b\u539f\u6765\u7684\u4e8b\uff0c\u53bb\u804a\u5929\u201d\uff1bstopped talking \u5219\u662f\u201c\u628a\u804a\u5929\u505c\u4e0b\u6765\u201d\u3002',
+    echo: 'She stopped to answer the phone.',
+  },
+  {
+    id: 'article-shared-world',
+    context: '\u684c\u4e0a\u6709\u597d\u51e0\u672c\u4e66\u3002\u521a\u624d\u4f60\u548c\u670b\u53cb\u5df2\u7ecf\u8c08\u5230\u5176\u4e2d\u90a3\u672c\u84dd\u8272\u7684\u3002',
+    question: '\u73b0\u5728\u4f60\u4f1a\u600e\u4e48\u8bf7\u4ed6\u628a\u5b83\u9012\u8fc7\u6765\uff1f',
+    options: ['Pass me a blue book.', 'Pass me the blue book.'],
+    answer: 'Pass me the blue book.',
+    insight: 'the \u50cf\u662f\u8bf4\u201c\u6211\u4eec\u90fd\u77e5\u9053\u662f\u54ea\u4e00\u4e2a\u201d\uff1ba \u53ea\u4f1a\u4ece\u4e00\u7c7b\u4e1c\u897f\u4e2d\u62ff\u51fa\u67d0\u4e00\u4e2a\u3002',
+    echo: 'Could you close thewindow?',
+  },
+  {
+    id: 'progressive-temporary',
+    context: '\u4f60\u7684\u540c\u5b66\u8fd9\u51e0\u5929\u6682\u65f6\u548c\u59d1\u59d1\u4f4f\u5728\u4e00\u8d77\uff0c\u4e0d\u662f\u957f\u671f\u5b89\u6392\u3002',
+    question: '\u54ea\u53e5\u6709\u8fd9\u79cd\u201c\u53ea\u662f\u773c\u4e0b\u8fd9\u4e00\u9635\u201d\u7684\u611f\u89c9\uff1f',
+    options: ['She stays with her aunt.', 'She is staying with her aunt.'],
+    answer: 'She is staying with her aunt.',
+    insight: 'is staying \u628a\u5b83\u653e\u8fdb\u4e00\u6bb5\u6709\u8fb9\u754c\u7684\u5f53\u4e0b\u65f6\u95f4\u91cc\uff1bstays \u66f4\u50cf\u7a33\u5b9a\u7684\u4e60\u60ef\u6216\u5b89\u6392\u3002',
+    echo: 'I am taking the busthis week.',
+  },
+  {
+    id: 'must-have-inference',
+    context: '\u6559\u5ba4\u7a7a\u4e86\uff0c\u706f\u4e5f\u5173\u7740\uff0c\u4f60\u63a8\u6d4b\u4ed6\u4eec\u5df2\u7ecf\u56de\u5bb6\u3002',
+    question: '\u54ea\u53e5\u542c\u8d77\u6765\u662f\u6839\u636e\u773c\u524d\u8ff9\u8c61\u505a\u7684\u63a8\u65ad\uff1f',
+    options: ['They must have gone home.', 'They had to go home.'],
+    answer: 'They must have gone home.',
+    insight: 'must have gone \u662f\u770b\u7740\u73b0\u5728\u7684\u8ff9\u8c61\u5411\u8fc7\u53bb\u63a8\u7406\uff1bhad to go \u8bf4\u7684\u662f\u5f53\u65f6\u201c\u4e0d\u5f97\u4e0d\u8d70\u201d\u3002',
+    echo: 'She must have missed the train.',
+  },
+]
