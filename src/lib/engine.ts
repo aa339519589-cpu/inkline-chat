@@ -1,4 +1,4 @@
-import { grammarCards } from '../data/grammar'
+import { getGroupWords } from './course'
 import type {
   AnswerEvidence,
   AppState,
@@ -15,11 +15,11 @@ const DAY_MS = 86_400_000
 export const AXES: SkillAxis[] = ['form', 'receptive', 'productive', 'usage', 'boundary']
 
 export const AXIS_LABELS: Record<SkillAxis, string> = {
-  form: '\u62fc\u5199\u4e0e\u58f0\u97f3',
-  receptive: '\u8bed\u5883\u7406\u89e3',
-  productive: '\u4e3b\u52a8\u60f3\u8d77',
-  usage: '\u81ea\u7136\u7528\u6cd5',
-  boundary: '\u8bcd\u4e49\u8fb9\u754c',
+  form: '拼写与声音',
+  receptive: '语境理解',
+  productive: '主动想起',
+  usage: '自然用法',
+  boundary: '词义边界',
 }
 
 const TARGET_RECALL: Record<SkillAxis, number> = {
@@ -47,15 +47,14 @@ export function newTrace(axis: SkillAxis): SkillTrace {
   }
 }
 
-export function newWordProgress(word: string): WordProgress{
+export function newWordProgress(word: string): WordProgress {
   return {
     word,
-    traces: Object.fromEntries(AXES.map((axis) => [axis, newTrace(axis)])) as Record<
-      SkillAxis,
-      SkillTrace
-    >,
+    traces: Object.fromEntries(AXES.map((axis) => [axis, newTrace(axis)])) as Record<SkillAxis, SkillTrace>,
     exposures: 0,
     contextsSeen: [],
+    correctCount: 0,
+    wrongCount: 0,
   }
 }
 
@@ -75,7 +74,7 @@ function evidenceWeight(evidence: AnswerEvidence): number {
   }
   const chanceCorrection = evidence.cardKind === 'context' || evidence.cardKind === 'boundary' ? 0.55 : 1
   const hintPenalty = evidence.usedHint ? 0.35 : 1
-  return axisWeight[evidence.cardKind] * chanceCorrection *hintPenalty
+  return axisWeight[evidence.cardKind] * chanceCorrection * hintPenalty
 }
 
 export function updateWordProgress(
@@ -97,20 +96,21 @@ export function updateWordProgress(
   trace.lastSeenAt = now
 
   if (answer.correct && !answer.usedHint) {
-    const growth = 1 + weight* quality * (0.25 + 2.4 * (1 - r)) * (1 - 0.3 * trace.difficulty)
+    const growth = 1 + weight * quality * (0.25 + 2.4 * (1 - r)) * (1 - 0.3 * trace.difficulty)
     trace.halfLifeDays = Math.min(180, Math.max(DEFAULT_HALF_LIFE[answer.axis], trace.halfLifeDays * growth))
     trace.lastSuccessAt = now
+    progress.correctCount += 1
   } else {
-    trace.halfLifeDays = Math.max(DEFAULT_HALF_LIFE[answer.axis], trace.halfLifeDays * (1- weight * (0.45 + 0.35 * r)))
+    trace.halfLifeDays = Math.max(DEFAULT_HALF_LIFE[answer.axis], trace.halfLifeDays * (1 - weight * (0.45 + 0.35 * r)))
     trace.lapses += 1
+    progress.wrongCount += 1
   }
 
   progress.exposures += 1
-  if (!progress.contextsSeen.includes(answer.cardKind)) {
-    progress.contextsSeen.push(answer.cardKind)
-  }
+  progress.firstSeenAt ??= now
+  progress.lastSeenAt = now
+  if (!progress.contextsSeen.includes(answer.cardKind)) progress.contextsSeen.push(answer.cardKind)
 
-  // A successful active recall is also weak evidence that the form and use are connected.
   if (answer.cardKind === 'recall' && answer.correct && !answer.usedHint) {
     const usage = progress.traces.usage
     usage.evidence += 0.2
@@ -130,9 +130,7 @@ function weakestAxis(progress: WordProgress | undefined, hasContrast: boolean, n
   return candidates.reduce((weakest, axis) => {
     const currentGap = TARGET_RECALL[axis] - retrievability(progress.traces[axis], now)
     const weakestGap = TARGET_RECALL[weakest] - retrievability(progress.traces[weakest], now)
-    const evidenceGap = Math.max(0, 1.6 - progress.traces[axis].evidence) * 0.18
-    const weakestEvidenceGap = Math.max(0, 1.6 - progress.traces[weakest].evidence) * 0.18
-    return currentGap + evidenceGap > weakestGap + weakestEvidenceGap ? axis : weakest
+    return currentGap > weakestGap ? axis : weakest
   }, candidates[0])
 }
 
@@ -144,52 +142,38 @@ function kindForAxis(axis: SkillAxis, word: VocabularyEntry, progress?: WordProg
   return word.challenge ? 'context' : 'encounter'
 }
 
-function wordNeed(word: VocabularyEntry, state: AppState, now: number): number {
-  const progress = state.progress[word.word]
-  if (!progress) return 1.25 - word.rank / 20_000
-  const axes: SkillAxis[] = word.contrast
-    ? ['receptive', 'productive', 'usage', 'boundary']
-    : ['receptive', 'productive', 'usage']
-  const need = axes.reduce((sum, axis) => {
-    const r = retrievability(progress.traces[axis], now)
-    const evidenceGap = Math.max(0, 1.8 - progress.traces[axis].evidence) * 0.12
-    return sum + Math.max(0, TARGET_RECALL[axis] - r) + evidenceGap
-  }, 0)
-  return need / axes.length +Math.min(0.3, progress.traces.receptive.lapses * 0.08)
+function reviewNeed(progress: WordProgress, now: number): number {
+  const axes: SkillAxis[] = ['receptive', 'productive', 'usage']
+  return axes.reduce((sum, axis) => sum + Math.max(0, TARGET_RECALL[axis] - retrievability(progress.traces[axis], now)), 0)
 }
 
-export function buildSession(
-  words: VocabularyEntry[],
-  state: AppState,
-  now = Date.now(),
-): LearningCard[] {
+export function buildSession(words: VocabularyEntry[], state: AppState, now = Date.now()): LearningCard[] {
   const length = state.gentleMode ? 6 : 10
-  const ranked = [...words]
-    .sort((a, b) => wordNeed(b, state, now) - wordNeed(a, state, now) || a.rank - b.rank)
-    .slice(0, length)
+  const groupWords = getGroupWords(words, state.currentGroup)
 
-  const cards: LearningCard[]= ranked.map((word, index) =>{
+  const due = groupWords
+    .filter((word) => state.progress[word.word])
+    .sort((a, b) => {
+      const needDiff = reviewNeed(state.progress[b.word], now) - reviewNeed(state.progress[a.word], now)
+      if (Math.abs(needDiff) > 0.001) return needDiff
+      return (state.progress[a.word].lastSeenAt ?? 0) - (state.progress[b.word].lastSeenAt ?? 0)
+    })
+
+  const unseen = groupWords.filter((word) => !state.progress[word.word])
+  const ordered = [...due.slice(0, Math.ceil(length / 2)), ...unseen, ...due]
+  const unique = ordered.filter((word, index, array) => array.findIndex((item) => item.word === word.word) === index)
+  const selected = unique.slice(0, length)
+
+  return selected.map((word, index) => {
     const progress = state.progress[word.word]
     const targetAxis = weakestAxis(progress, Boolean(word.contrast), now)
     return {
-      id: `${word.word}-${targetAxis}-${index}`,
+      id: `${state.currentGroup}-${word.word}-${targetAxis}-${index}`,
       kind: kindForAxis(targetAxis, word, progress),
       word,
       targetAxis,
     }
   })
-
-  if (!state.gentleMode && cards.length >= 5) {
-    const grammar = grammarCards[state.completedCards % grammarCards.length]
-    cards.splice(4, 0, {
-      id: `grammar-${grammar.id}-${state.completedCards}`,
-      kind: 'grammar',
-      grammar,
-      targetAxis: 'usage',
-    })
-  }
-
-  return cards
 }
 
 export function recallAnswerMatches(input: string, word: VocabularyEntry): boolean {
@@ -209,7 +193,7 @@ export function recallAnswerMatches(input: string, word: VocabularyEntry): boole
 export function axisStrength(progress: WordProgress | undefined, axis: SkillAxis, now = Date.now()): number {
   if (!progress) return 0
   const trace = progress.traces[axis]
-  const evidenceConfidence = 1 - Math.exp(-trace.evidence /2.2)
+  const evidenceConfidence = 1 - Math.exp(-trace.evidence / 2.2)
   const memory = retrievability(trace, now)
   return Math.max(0, Math.min(1, evidenceConfidence * memory))
 }
@@ -223,6 +207,6 @@ export function mastered(progress: WordProgress | undefined): boolean {
   ]
   return required.every(([axis, halfLife, evidence]) => {
     const trace = progress.traces[axis]
-    return trace.halfLifeDays>= halfLife && trace.evidence>= evidence
+    return trace.halfLifeDays >= halfLife && trace.evidence >= evidence
   })
 }
