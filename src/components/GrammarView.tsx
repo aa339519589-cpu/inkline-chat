@@ -43,9 +43,8 @@ export function GrammarView({ state, onSelectLevel, onRecord }: GrammarViewProps
   return (
     <main className="grammar-view page-shell">
       <section className="grammar-intro">
-        <p className="eyebrow">语法感觉</p>
-        <h1>不是背规则。先看场景，再听哪一句更像英语。</h1>
-        <p>从最基础的“具体是哪一个”开始，一层一层走到时间、动作关系和推断。</p>
+        <p className="eyebrow">语感</p>
+        <h1>先听，再判断。</h1>
       </section>
 
       <section className="grammar-levels" aria-label="语法难度选择">
@@ -58,9 +57,9 @@ export function GrammarView({ state, onSelectLevel, onRecord }: GrammarViewProps
               className={item.level === card.level ? 'grammar-level active' : 'grammar-level'}
               onClick={() => onSelectLevel(item.level)}
             >
-              <span>第 {item.level} 组</span>
+              <span>{String(item.level).padStart(2, '0')}</span>
               <strong>{item.title}</strong>
-              <small>{itemProgress ? `练过 ${itemProgress.attempts} 次` : '未开始'}</small>
+              {itemProgress && <small>{itemProgress.attempts} 次</small>}
             </button>
           )
         })}
@@ -69,10 +68,10 @@ export function GrammarView({ state, onSelectLevel, onRecord }: GrammarViewProps
       <section className="grammar-card">
         <div className="grammar-card-head">
           <div>
-            <span>第 {card.level} 组</span>
+            <span>{String(card.level).padStart(2, '0')}</span>
             <h2>{card.title}</h2>
           </div>
-          {progress && <small>正确 {progress.correct} / {progress.attempts}</small>}
+          {progress && <small>{progress.correct}/{progress.attempts}</small>}
         </div>
 
         <p className="grammar-scene">{card.context}</p>
@@ -93,8 +92,8 @@ export function GrammarView({ state, onSelectLevel, onRecord }: GrammarViewProps
                   <span>{index + 1}</span>
                   <strong>{option}</strong>
                 </button>
-                <button type="button" className="sound-button" onClick={() => speak(option)} aria-label="播放句子">
-                  <Volume2 size={18} />
+                <button type="button" className="sound-button" onClick={() => speak(option)} aria-label="播放">
+                  <Volume2 size={17} />
                 </button>
               </div>
             )
@@ -104,17 +103,16 @@ export function GrammarView({ state, onSelectLevel, onRecord }: GrammarViewProps
         {selected && (
           <div className={correct ? 'grammar-feedback correct' : 'grammar-feedback repair'}>
             <div className="grammar-result">
-              {correct ? <Check size={20} /> : <X size={20} />}
-              <strong>{correct ? '对，这一句更自然' : '先别背答案，听这个区别'}</strong>
+              {correct ? <Check size={18} /> : <X size={18} />}
+              <strong>{correct ? '对' : card.answer}</strong>
             </div>
-            {!correct && <p className="grammar-answer">更自然的是：{card.answer}</p>}
             <p>{card.insight}</p>
             <button type="button" className="echo-button" onClick={() => speak(card.echo)}>
-              <Volume2 size={17} /> 再听一个同样的感觉：{card.echo}
+              <Volume2 size={16} /> {card.echo}
             </button>
             {card.level < grammarCards.length && (
               <button type="button" className="primary-button" onClick={nextLevel}>
-                下一组 <ArrowRight size={18} />
+                下一组 <ArrowRight size={17} />
               </button>
             )}
           </div>
