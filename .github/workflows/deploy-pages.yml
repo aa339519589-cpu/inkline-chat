@@ -33,6 +33,9 @@ jobs:
       - name: Build
         run: npm run build -- --base=./
 
+      - name: Stamp build
+        run: printf '%s\n' "$GITHUB_SHA" > dist/build-info.txt
+
       - name: Publish static branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
