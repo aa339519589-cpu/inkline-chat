@@ -1,6 +1,6 @@
-import { BatteryLow, BookOpenCheck, Library, Route, Settings2} from 'lucide-react'
+import { BatteryLow, BookOpenCheck, Library, Route, Settings2, Sparkles } from 'lucide-react'
 
-export type ViewName = 'learn'| 'library' | 'path'
+export type ViewName = 'learn' | 'library' | 'path' | 'grammar'
 
 type HeaderProps = {
   view: ViewName
@@ -11,30 +11,31 @@ type HeaderProps = {
 }
 
 const navItems = [
-  { id: 'learn' as const, label: '\u5b66\u4e60', icon: BookOpenCheck },
-  { id: 'library' as const, label: '\u8bcd\u5e93', icon: Library },
-  { id: 'path' as const, label: '\u8def\u5f84', icon: Route },
+  { id: 'learn' as const, label: '学习', icon: BookOpenCheck },
+  { id: 'library' as const, label: '词库', icon: Library },
+  { id: 'path' as const, label: '分组', icon: Route },
+  { id: 'grammar' as const, label: '语法', icon: Sparkles },
 ]
 
-export function Header({ view,onViewChange, onSettings, gentleMode, onGentleMode }: HeaderProps) {
+export function Header({ view, onViewChange, onSettings, gentleMode, onGentleMode }: HeaderProps) {
   return (
     <header className="app-header">
-      <button className="brand" type="button" onClick={() => onViewChange('learn')} aria-label="\u8fd4\u56de\u5b66\u4e60">
-        <span className="brand-mark">\u8bcd</span>
+      <button className="brand" type="button" onClick={() => onViewChange('learn')} aria-label="返回学习">
+        <span className="brand-mark">词</span>
         <span className="brand-copy">
-          <strong>\u8bcd\u5883</strong>
+          <strong>词境</strong>
           <small>3600</small>
         </span>
       </button>
 
-      <nav className="main-nav" aria-label="\u4e3b\u5bfc\u822a">
+      <nav className="main-nav" aria-label="主导航">
         {navItems.map(({ id, label, icon: Icon }) => (
           <button
             className={view === id ? 'nav-item active' : 'nav-item'}
             type="button"
             key={id}
             onClick={() => onViewChange(id)}
-            aria-current={view=== id ? 'page' : undefined}
+            aria-current={view === id ? 'page' : undefined}
           >
             <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
             <span>{label}</span>
@@ -47,13 +48,13 @@ export function Header({ view,onViewChange, onSettings, gentleMode, onGentleMode
           className={gentleMode ? 'icon-button active' : 'icon-button'}
           type="button"
           onClick={onGentleMode}
-          title={gentleMode ? '\u6062\u590d\u6807\u51c6\u8282\u594f' : '\u8f7b\u4e00\u70b9'}
-          aria-label={gentleMode ? '\u6062\u590d\u6807\u51c6\u8282\u594f' : '\u5207\u6362\u5230\u8f7b\u91cf\u5b66\u4e60'}
+          title={gentleMode ? '恢复标准节奏' : '切换轻量学习'}
+          aria-label={gentleMode ? '恢复标准节奏' : '切换轻量学习'}
         >
           <BatteryLow size={19} strokeWidth={1.8} aria-hidden="true" />
         </button>
-        <button className="icon-button" type="button" onClick={onSettings} title="\u8bbe\u7f6e" aria-label="\u6253\u5f00\u8bbe\u7f6e">
-          <Settings2 size={19}strokeWidth={1.8} aria-hidden="true" />
+        <button className="icon-button" type="button" onClick={onSettings} title="设置" aria-label="打开设置">
+          <Settings2 size={19} strokeWidth={1.8} aria-hidden="true" />
         </button>
       </div>
     </header>

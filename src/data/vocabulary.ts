@@ -1,4 +1,4 @@
 import { curatedWords } from './curated'
+import { intermediateWords, starterWords } from './courseWords'
 
-// The generated high-school list is merged here during the data build.
-export const vocabulary = curatedWords
+export const vocabulary = [...starterWords, ...intermediateWords, ...curatedWords]

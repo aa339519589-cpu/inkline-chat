@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from 'node:fs'
 
 const targets = [
   ['src/data/curated.ts', 3],
-  ['src/styles.css', 4],
 ]
 
 for (const [target, count] of targets) {

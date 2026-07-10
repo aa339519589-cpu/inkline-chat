@@ -1,73 +1,81 @@
-import { AXES, AXIS_LABELS, axisStrength, mastered } from '../lib/engine'
-import type { AppState, SkillAxis, VocabularyEntry } from '../types'
+import { CheckCircle2, Lock, PlayCircle } from 'lucide-react'
+import { GROUP_SIZE, groupCount, groupUnlocked, studyHistory } from '../lib/course'
+import type { AppState, VocabularyEntry } from '../types'
 
 type PathViewProps = {
   words: VocabularyEntry[]
   state: AppState
+  onSelectGroup: (group: number) => void
 }
 
-const AXIS_NOTES: Record<SkillAxis, string> = {
-  form: '\u62fc\u5199\u548c\u58f0\u97f3\u80fd\u5bf9\u4e0a',
-  receptive: '\u6362\u4e00\u53e5\u4e5f\u80fd\u7406\u89e3',
-  productive: '\u6ca1\u6709\u9009\u9879\u4e5f\u80fd\u60f3\u8d77',
-  usage: '\u77e5\u9053\u5b83\u559c\u6b22\u5f85\u5728\u54ea\u91cc',
-  boundary: '\u80fd\u542c\u51fa\u76f8\u8fd1\u8bcd\u7684\u6c14\u8d28\u5dee\u522b',
-}
-
-export function PathView({ words, state }: PathViewProps) {
-  const touchedWords = words.filter((word) => state.progress[word.word])
-  const stableWords = touchedWords.filter((word) => mastered(state.progress[word.word]))
-  const averages = Object.fromEntries(AXES.map((axis) => {
-    if (!touchedWords.length) return [axis, 0]
-    const total = touchedWords.reduce((sum, word) => sum + axisStrength(state.progress[word.word], axis), 0)
-    return [axis, total / touchedWords.length]
-  })) as Record<SkillAxis, number>
-
-  const recent = touchedWords
-    .sort((a, b) => (state.progress[b.word].traces.receptive.lastSeenAt ?? 0) - (state.progress[a.word].traces.receptive.lastSeenAt ?? 0))
-    .slice(0, 4)
+export function PathView({ words, state, onSelectGroup }: PathViewProps) {
+  const totalGroups = groupCount(words)
+  const groups = Array.from({ length: totalGroups }, (_, index) => index + 1)
 
   return (
-    <main className="path-viewpage-shell">
-      <section className="path-intro">
-        <p className="eyebrow">\u4f60\u6b63\u5728\u5efa\u7acb\u7684\u4e0d\u662f\u8bcd\u8868</p>
-        <h1>\u8bed\u8a00\u5728\u8111\u6d77\u91cc\uff0c<br />\u662f\u4e00\u5f20\u6162\u6162\u8fde\u8d77\u6765\u7684\u7f51\u3002</h1>
-        <p>\u7cfb\u7edf\u4f1a\u8bb0\u4f4f\u54ea\u4e9b\u53ea\u662f\u773c\u719f\uff0c\u54ea\u4e9b\u5df2\u7ecf\u80fd\u4e3b\u52a8\u60f3\u8d77\u3002\u4f60\u4e0d\u9700\u8981\u7ba1\u8fd9\u5f20\u7f51\u600e\u4e48\u6392\u3002</p>
-        <div className="quiet-counts">
-          <p><strong>{touchedWords.length}</strong><span>\u5df2\u7ecf\u89c1\u8fc7</span></p>
-          <p><strong>{stableWords.length}</strong><span>\u591a\u7ef4\u7a33\u5b9a</span></p>
-          <p><strong>{Math.max(0, words.length - touchedWords.length)}</strong><span>\u7b49\u5f85\u5408\u9002\u65f6\u673a</span></p>
-        </div>
+    <main className="course-view page-shell">
+      <section className="course-intro">
+        <p className="eyebrow">单词课程</p>
+        <h1>固定分组，从简单到难。每组 60 个词。</h1>
+        <p>不随机跳词。每个词的第一次学习、错误次数、正确次数和最近学习时间都会保留。</p>
       </section>
 
-      <section className="trace-section">
-        <div className="section-title">
-          <p className="eyebrow">\u8bb0\u4f4f\u4e00\u4e2a\u8bcd\u7684\u4e94\u79cd\u8bc1\u636e</p>
-          <p>\u7b54\u5bf9\u4e00\u6b21\u4e0d\u4f1a\u8ba9\u4efb\u4f55\u4e00\u6761\u7acb\u523b\u586b\u6ee1\u3002</p>
-        </div>
-        <div className="trace-list">
-          {AXES.map((axis) => (
-            <div className="trace-row" key={axis}>
-              <span className="trace-number">0{AXES.indexOf(axis) + 1}</span>
-              <div>
-                <strong>{AXIS_LABELS[axis]}</strong>
-                <small>{AXIS_NOTES[axis]}</small>
+      <section className="course-groups" aria-label="单词分组">
+        {groups.map((group) => {
+          const stats = studyHistory(words, state, group)
+          const unlocked = groupUnlocked(words, state, group)
+          const active = state.currentGroup === group
+          const completed = stats.seen === GROUP_SIZE
+          return (
+            <article className={active ? 'course-group active' : 'course-group'} key={group}>
+              <div className="course-group-head">
+                <div>
+                  <span>第 {String(group).padStart(2, '0')} 组</span>
+                  <h2>{group === 1 ? '基础高频动作' : group === 2 ? '进阶表达与语境' : '继续进阶'}</h2>
+                </div>
+                {completed ? <CheckCircle2 size={24} /> : unlocked ? <PlayCircle size={24} /> : <Lock size={22} />}
               </div>
-              <i><b style={{ width: `${averages[axis] * 100}%` }} /></i>
-            </div>
-          ))}
-        </div>
+
+              <div className="course-progress-line">
+                <span style={{ width: `${Math.min(100, (stats.seen / Math.max(1, stats.total)) * 100)}%` }} />
+              </div>
+
+              <div className="course-stats">
+                <span><strong>{stats.seen}</strong> / {stats.total} 已学</span>
+                <span>答对 {stats.correct}</span>
+                <span>答错 {stats.wrong}</span>
+              </div>
+
+              <button
+                type="button"
+                className="course-action"
+                disabled={!unlocked}
+                onClick={() => onSelectGroup(group)}
+              >
+                {!unlocked ? '完成上一组后解锁' : active ? '继续当前组' : stats.seen ? '继续这一组' : '开始这一组'}
+              </button>
+            </article>
+          )
+        })}
       </section>
 
-      <section className="recent-section">
-        <div>
-          <p className="eyebrow">\u6700\u8fd1\u7559\u4e0b\u7684\u8fde\u63a5</p>
-          <h2>{recent.length ?'\u8fd9\u4e9b\u8bcd\u5df2\u7ecf\u4e0d\u518d\u662f\u7b2c\u4e00\u6b21\u89c1\u9762\u3002' : '\u5b8c\u6210\u7b2c\u4e00\u5c0f\u6bb5\u540e\uff0c\u8fde\u63a5\u4f1a\u4ece\u8fd9\u91cc\u5f00\u59cb\u3002'}</h2>
-        </div>
-        <div className="recent-words">
-          {recent.map((word) => (
-            <span key={word.word}><strong>{word.word}</strong><small>{word.collocations[0]}</small></span>
-          ))}
+      <section className="history-panel">
+        <p className="eyebrow">学习历史</p>
+        <h2>每一组都有记录，不会背完即消失。</h2>
+        <div className="history-list">
+          {groups.map((group) => {
+            const stats = studyHistory(words, state, group)
+            if (!stats.seen) return null
+            return (
+              <div key={group}>
+                <strong>第 {String(group).padStart(2, '0')} 组</strong>
+                <span>已学 {stats.seen} / {stats.total}</span>
+                <span>正确 {stats.correct}</span>
+                <span>错误 {stats.wrong}</span>
+                <span>{stats.history?.lastStudiedAt ? new Date(stats.history.lastStudiedAt).toLocaleDateString('zh-CN') : '刚开始'}</span>
+              </div>
+            )
+          })}
         </div>
       </section>
     </main>

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { curatedWords } from '../data/curated'
+import { vocabulary } from '../data/vocabulary'
 import { buildSession, mastered, newWordProgress, recallAnswerMatches, retrievability, updateWordProgress } from './engine'
 import { initialState } from './storage'
 
 describe('memory engine', () => {
-  it('decays recall probability by half after one half-life',() => {
+  it('decays recall probability by half after one half-life', () => {
     const now = Date.now()
     const progress = newWordProgress('issue')
     progress.traces.receptive.halfLifeDays = 2
@@ -33,10 +34,11 @@ describe('memory engine', () => {
     expect(recallAnswerMatches('advises', word)).toBe(false)
   })
 
-  it('builds a short automaticsession without duplicate words', () => {
-    const cards = buildSession(curatedWords, initialState, Date.now())
+  it('builds the first group in a fixed order without duplicate words', () => {
+    const cards = buildSession(vocabulary, initialState, Date.now())
     const words = cards.flatMap((card) => card.word?.word ?? [])
-    expect(cards.length).toBe(11)
+    expect(cards.length).toBe(10)
+    expect(words).toEqual(vocabulary.slice(0, 10).map((word) => word.word))
     expect(new Set(words).size).toBe(words.length)
   })
 
